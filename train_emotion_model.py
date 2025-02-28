@@ -1,5 +1,7 @@
 import os
 import tensorflow as tf
+import tf2onnx
+import onnx
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
@@ -39,7 +41,6 @@ def main():
     val_dir = 'data/test'
     
     # 3. Image Data Generators
-    # Rescale pixel values from [0, 255] to [0, 1]
     train_datagen = ImageDataGenerator(
         rescale=1.0/255.0,
         rotation_range=10,      # random rotation
@@ -73,17 +74,23 @@ def main():
     model.summary()
     
     # 6. Train the model
-    # Adjust epochs as needed (e.g., 30, 50, or more, depending on your hardware).
     history = model.fit(
         train_generator,
         epochs=30,
         validation_data=val_generator
     )
     
-    # 7. Save model weights
-    # This file can then be loaded in your face detection + emotion script.
-    model.save_weights('my_emotion_model_weights.h5')
-    print("Model weights saved to 'my_emotion_model_weights.h5'")
+    # 7. Save the model
+    model.save('emotion_model.h5')
+    print("Model saved as 'emotion_model.h5'")
+
+    # 8. Convert to ONNX format
+    onnx_model_path = "emotion_model.onnx"
+    input_signature = [tf.TensorSpec([None, 48, 48, 1], tf.float32, name="input")]
+    onnx_model, _ = tf2onnx.convert.from_keras(model, input_signature, opset=13)
+    onnx.save_model(onnx_model, onnx_model_path)
+    
+    print(f"Model converted to ONNX format and saved as '{onnx_model_path}'")
 
 if __name__ == '__main__':
     main()
