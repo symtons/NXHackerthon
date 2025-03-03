@@ -80,7 +80,7 @@ def main():
         validation_data=val_generator
     )
     
-    # 7. Save the model
+    
     model.save('emotion_model.h5')
     print("Model saved as 'emotion_model.h5'")
 
